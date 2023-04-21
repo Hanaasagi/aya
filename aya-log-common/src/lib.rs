@@ -34,6 +34,20 @@ pub enum Level {
     /// Designates very low priority, often extremely verbose, information.
     Trace,
 }
+pub trait DefaultFormatter {}
+impl DefaultFormatter for str {}
+impl DefaultFormatter for &str {}
+// impl DefaultFormatter for [u8; 6] {}
+
+pub fn check_impl_default<T: DefaultFormatter>(v: T) {}
+
+// impl Formatter<bool> for DefaultFormatter {}
+// impl Formatter<char> for DefaultFormatter {}
+// impl Formatter<i8> for DefaultFormatter {}
+// impl Formatter<str> for DefaultFormatter {}
+// impl Formatter<str> for DefaultFormatter {}
+// impl Formatter<String> for DefaultFormatter {}
+// impl<T> Formatter<T> for DefaultFormatter where T: Display + ?Sized {}
 
 #[repr(u8)]
 #[derive(Copy, Clone, Debug)]

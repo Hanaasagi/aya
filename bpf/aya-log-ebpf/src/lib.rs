@@ -22,6 +22,8 @@ pub static mut AYA_LOGS: PerfEventByteArray = PerfEventByteArray::new(0);
 
 #[doc(hidden)]
 pub mod macro_support {
-    pub use aya_log_common::{DisplayHint, Level, LOG_BUF_CAPACITY};
+    pub use aya_log_common::{
+        check_impl_default, DefaultFormatter, DisplayHint, Level, LOG_BUF_CAPACITY,
+    };
     pub use aya_log_ebpf_macros::log;
 }

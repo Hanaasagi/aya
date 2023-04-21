@@ -86,6 +86,19 @@ fn hint_to_expr(hint: DisplayHint) -> Result<Expr> {
     }
 }
 
+fn hint_to_impl_check(hint: DisplayHint) -> Result<Expr> {
+    match hint {
+        DisplayHint::Default => parse_str("::aya_log_ebpf::macro_support::check_impl_default"),
+        // TODO
+        DisplayHint::LowerHex => parse_str(""),
+        DisplayHint::UpperHex => parse_str(""),
+        DisplayHint::Ipv4 => parse_str(""),
+        DisplayHint::Ipv6 => parse_str(""),
+        DisplayHint::LowerMac => parse_str(""),
+        DisplayHint::UpperMac => parse_str(""),
+    }
+}
+
 pub(crate) fn log(args: LogArgs, level: Option<TokenStream>) -> Result<TokenStream> {
     let ctx = args.ctx;
     let target = match args.target {
@@ -115,6 +128,8 @@ pub(crate) fn log(args: LogArgs, level: Option<TokenStream>) -> Result<TokenStre
     let mut arg_i = 0;
 
     let mut values = Vec::new();
+    let mut f_keys = Vec::new();
+    let mut f_values = Vec::new();
     for fragment in fragments {
         match fragment {
             Fragment::Literal(s) => {
@@ -126,7 +141,10 @@ pub(crate) fn log(args: LogArgs, level: Option<TokenStream>) -> Result<TokenStre
                     None => return Err(Error::new(format_string.span(), "no arguments provided")),
                 };
                 values.push(hint_to_expr(p.hint)?);
-                values.push(arg);
+                values.push(arg.clone());
+
+                f_keys.push(hint_to_impl_check(p.hint)?);
+                f_values.push(arg.clone());
                 arg_i += 1;
             }
         }
@@ -135,8 +153,18 @@ pub(crate) fn log(args: LogArgs, level: Option<TokenStream>) -> Result<TokenStre
     let num_args = values.len();
     let values_iter = values.iter();
 
+    let f_keys = f_keys.iter();
+    let f_values = f_values.iter();
+
     Ok(quote! {
         {
+            #(
+                // ("{:?}", {#f_keys});
+                // ("{:?}", {#f_values});
+
+                #f_keys(#f_values);
+            )*
+
             if let Some(buf_ptr) = unsafe { ::aya_log_ebpf::AYA_LOG_BUF.get_ptr_mut(0) } {
                 let buf = unsafe { &mut *buf_ptr };
                 if let Ok(header_len) = ::aya_log_ebpf::write_record_header(
